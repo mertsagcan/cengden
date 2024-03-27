@@ -1,11 +1,10 @@
-from flask import Flask
+from flask import Flask, render_template, request, redirect, url_for
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+
 app = Flask(__name__)
 
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
 
-
-@app.route('/hello')
-def hello():
-    return 'Hello, World!2 '
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    return render_template('index.html')
