@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WELOCME TO CENGDEN</title>
+    <title>Cengden</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">WebApp</a>
+        <a class="navbar-brand" href="#">CENGDEN</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -29,17 +29,28 @@
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="#login">Login</a>
+                    <a class="nav-link" href="/login">Login</a>
                 </li>
             </ul>
         </div>
     </nav>
 
-    <div class="container mt-5">
-        <div id="items-list" class="row">
-            <!-- Dynamic items from MongoDB will be listed here -->
-            <!-- You can use Flask templating to loop through items and display them -->
-        </div>
+    <h1>Items Listing</h1>
+
+    <ul>
+        {% for item in items %}
+            <li><a href="{{ url_for('item_detail', item_id=item.id) }}">{{ item.title }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <div>
+        {% if page > 1 %}
+            <a href="{{ url_for('home', page=page-1) }}">Previous</a>
+        {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+            <a href="{{ url_for('home', page=page+1) }}">Next</a>
+        {% endif %}
     </div>
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
