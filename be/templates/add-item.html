@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cengden</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            padding: 10px;
+            background-color: #ffffff;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        ul li a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .pagination-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .pagination-container a {
+            margin: 0 5px;
+        }
+        .btn {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">CENGDEN</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">All Items</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/categories/vehicles">Vehicles</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/categories/phones">Phones</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/categories/computers">Computers</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/categories/private-lessons">Private Lessons</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <!-- Conditional rendering based on signed_in variable -->
+                {%if signed_in%}
+                    {%if is_admin%}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/add-item">All Users</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">Logout</a>
+                        </li>
+                    {%else%}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/favorites">Favorites</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/users-items">My Items</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/add-item">Add Item</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/profile">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">Logout</a>
+                        </li>
+                    {%endif%}
+                {%else%}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                {%endif%}
+            </ul>
+        </div>
+    </nav>   
+    
+    <div class="container mt-4">
+        <h2>Add New Item</h2>
+        <form id="addItemForm" action="/add-item" method="POST">
+            <div class="form-group">
+                <label for="itemCategory">Category</label>
+                <select class="form-control" id="itemCategory" name="category" required onchange="updateFieldsBasedOnCategory()">
+                    <option value="" disabled selected>Select a category</option>
+                    <option value="vehicles">Vehicles</option>
+                    <option value="phones">Phones</option>
+                    <option value="computers">Computers</option>
+                    <option value="private-lessons">Private Lessons</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Title</label>
+                <input type="text" class="form-control" name="title" placeholder="Enter title">
+
+                <label>Price</label>
+                <input type="text" class="form-control" name="price" placeholder="Enter price">
+
+                <label>Description</label>
+                <input class="form-control" name="description" placeholder="Enter description"></input>
+
+                <label>Image</label>
+                <input type="text" class="form-control" name="image" placeholder="Enter image url">
+
+            </div>
+            
+
+            
+            <div id="dynamicFields"></div>
+
+            <div class="row">
+                <div class="col">
+                    <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#addItemModal" id="addItemButton" style="display: none;">Add Custom Field</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Add Item Modal -->
+    <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addItemModalLabel">Add New Field</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <input type="text" class="form-control" id="newFieldName" placeholder="Enter field name">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="addNewField()">Add Field</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+        function updateFieldsBasedOnCategory() {
+            const category = document.getElementById('itemCategory').value;
+            const fieldsContainer = document.getElementById('dynamicFields');
+            fieldsContainer.innerHTML = ''; // Reset existing fields
+        
+            // Show the "Add Custom Field" button
+            document.getElementById('addItemButton').style.display = 'block';
+        
+            // Predefined fields for each category
+            const categoryFields = {
+                'vehicles': ['Type', 'Brand', 'Model', 'Year', 'Color', 'Fuel Type'],
+                'phones': ['Brand','Model', 'Year', 'Storage', 'Color'],
+                'computers': ['Type','Brand', 'Model', 'Storage', 'Color'],
+                'private-lessons': ['Title','Name of the Tutor']
+            };
+        
+            const fieldsToAdd = categoryFields[category] || [];
+        
+            fieldsToAdd.forEach(field => {
+                const fieldGroup = document.createElement('div');
+                fieldGroup.className = 'form-group';
+                fieldGroup.innerHTML = `
+                    <label>${field}</label>
+                    <input type="text" class="form-control" name="${field.toLowerCase().replace(/\s+/g, '-')}" placeholder="Enter ${field}">
+                `;
+                fieldsContainer.appendChild(fieldGroup);
+            });
+        }
+        
+        function addNewField() {
+            const fieldName = document.getElementById('newFieldName').value.trim();
+            if (!fieldName) {
+                alert('Field name cannot be empty.');
+                return;
+            }
+        
+            const fieldsContainer = document.getElementById('dynamicFields');
+            const fieldGroup = document.createElement('div');
+            fieldGroup.className = 'form-group';
+            fieldGroup.innerHTML = `
+                <label>${fieldName}</label>
+                <div class="d-flex align-items-center">
+                    <input type="text" class="form-control" name="${fieldName.toLowerCase().replace(/\s+/g, '-')}" placeholder="Enter ${fieldName}">
+                    <button type="button" class="btn btn-danger btn-sm ml-2" onclick="this.parentElement.remove()">Delete</button>
+                </div>
+            `;
+        
+            fieldsContainer.appendChild(fieldGroup);
+        
+            // Clear the input field and hide the modal
+            document.getElementById('newFieldName').value = '';
+            $('#addItemModal').modal('hide');
+        }
+        </script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    
+</body>
+</html>

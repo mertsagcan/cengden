@@ -111,22 +111,52 @@ def item_detail(item_id):
     item  = client.cengdendb.items.find_one({"_id" : ObjectId(item_id)})
     print
     if item:
-        return render_template('item_details.html', item=item)
+        return render_template('item-details.html', item=item)
     else:
         return "Item not found", 404
 
 @app.route('/profile')
 def profile():
-    user_details = {
-        'name': 'John Doe',
-        'email': 'johndoe@example.com',
-        'phone': '123-456-7890'
-    }
+    user_id = session['user']['userinfo']['sub']
+    user_details = client.cengdendb.users.find_one({"_id": user_id})
     if 'user' in session:
         return render_template('profile.html', user=user_details, signed_in=True)
     else:
         return redirect(url_for('login'))
 
+@app.route("/add-item")
+def add_item():
+    return render_template('add-item.html', signed_in=True)
+
+# Route for handling form submission and adding item to MongoDB
+@app.route("/add-item", methods=["POST"])
+def handle_add_item():
+    form_fields = {}
+    form_fields["owner_id"] = client.cengdendb.users.find_one({"email": session.get('user')["userinfo"]["email"]})["_id"]
+    form_fields["favoured_users"] = []
+
+    for key in request.form:
+        form_fields[key] = request.form[key]
+
+    form_fields = {k: v for k, v in form_fields.items() if v is not None and v != ""}
+
+    try:
+        client.cengdendb.items.insert_one(form_fields)
+        message = "Item added successfully!"
+    except Exception as e:
+        message = "An error occurred, please try again."
+
+    return redirect('/')
+
+@app.route("/users-items")
+def users_items():
+    user_id = session['user']['userinfo']['sub']
+    items = list(client.cengdendb.items.find({"owner_id": user_id}))
+    page = request.args.get('page', 1, type=int)
+    start = (page - 1) * ITEMS_PER_PAGE
+    end = start + ITEMS_PER_PAGE
+    total_pages = ceil(len(items) / ITEMS_PER_PAGE)
+    return render_template('users-items.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True)
 
 
 if __name__ == '__main__':
