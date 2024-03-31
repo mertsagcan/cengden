@@ -4,4 +4,4 @@ sendgrid
 pymongo
 authlib
 bson
-urllib
+requests
