@@ -3,5 +3,4 @@ Gunicorn
 sendgrid
 pymongo
 authlib
-bson
 requests
