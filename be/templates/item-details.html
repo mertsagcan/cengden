@@ -41,19 +41,47 @@
         .btn {
             cursor: pointer;
         }
+        .nested-attributes {
+            margin-left: 20px;
+        }
+        
+        .nested-attributes .form-group {
+            font-size: 0.9em; 
+        }
+        
+        .parent-attribute > label:after {
+            content: ""; 
+        }
     </style>
 </head>
-{% macro display_attributes(attributes, exclude=[], is_owner=false) %}
-        {% for attribute, value in attributes.items() %}
-            {% if attribute not in exclude %}
-                {% if value is mapping %}
+{% macro display_attributes(attributes, exclude=[], is_owner=false, level=0) %}
+    {% for attribute, value in attributes.items() %}
+        {% if attribute not in exclude %}
+            <div class="{{ 'nested-attributes' if level > 0 else '' }}" style="margin-left: {{ level * 20 }}px;">
+                {% if attribute == 'lessons' and value is iterable %}
+                    <!-- Special handling for 'lessons' attribute -->
                     <div class="form-group">
-                        <label><b>{{ attribute.capitalize().replace('-', ' ').replace('_', ' ') }}</b></label>
-                        {{ display_attributes(value, exclude=exclude, is_owner=is_owner) }} <!-- Recursive call for nested attributes -->
+                        <label><b>{{ attribute.capitalize().replace('-', ' ').replace('_', ' ') }}:</b></label>
+                        {% for lesson in value %}
+                            <div style="margin-left: {{ level * 20 + 20 }}px;">
+                                {% if is_owner %}
+                                    <input type="text" name="{{ attribute }}[]" value="{{ lesson }}" class="form-control">
+                                {% else %}
+                                    <p>{{ lesson }}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% elif value is mapping %}
+                    <!-- Handling for nested attributes -->
+                    <div class="form-group parent-attribute">
+                        <label><b>{{ attribute.capitalize().replace('-', ' ').replace('_', ' ') }}:</b></label>
+                        {{ display_attributes(value, exclude=exclude, is_owner=is_owner, level=level+1) }} <!-- Recursive call for nested attributes -->
                     </div>
                 {% else %}
+                    <!-- Default attribute display -->
                     <div class="form-group">
-                        <label><b>{{ attribute.capitalize().replace('-', ' ').replace('_', ' ') }}</b></label>
+                        <label><b>{{ attribute.capitalize().replace('-', ' ').replace('_', ' ') }}{{ ':' if level > 0 else '' }}</b></label>
                         {% if is_owner %}
                             <input type="text" name="{{ attribute }}" value="{{ value }}" class="form-control">
                         {% else %}
@@ -61,9 +89,10 @@
                         {% endif %}
                     </div>
                 {% endif %}
-            {% endif %}
-        {% endfor %}
-    {% endmacro %}
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">

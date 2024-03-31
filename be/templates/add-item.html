@@ -103,12 +103,58 @@
         </div>
     </nav>   
     
+    <div class="modal fade" id="addSubFieldModal" tabindex="-1" role="dialog" aria-labelledby="addSubFieldModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSubFieldModalLabel">Add New Camera Specs</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="form-control" id="subFieldName" placeholder="Enter subfield name">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="addSubFieldFromModal()">Add Field</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Custom Field Modal -->
+    <div class="modal fade" id="addCustomFieldModal" tabindex="-1" role="dialog" aria-labelledby="addCustomFieldModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCustomFieldModalLabel">Add New Field</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="form-control" id="customFieldModalName" placeholder="Enter field name">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="addCustomFieldFromModal()">Add Field</button>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+
+
+
     <div class="container mt-4">
         <h2>Add New Item</h2>
         <form id="addItemForm" action="/add-item" method="POST">
+
+            <!-- Category Selection -->
             <div class="form-group">
-                <label for="itemCategory">Category</label>
-                <select class="form-control" id="itemCategory" name="category" required onchange="updateFieldsBasedOnCategory()">
+                <label for="category">Category</label>
+                <select class="form-control" id="category" name="category" onchange="updateCategoryFields()" required>
                     <option value="" disabled selected>Select a category</option>
                     <option value="vehicles">Vehicles</option>
                     <option value="phones">Phones</option>
@@ -117,112 +163,157 @@
                 </select>
             </div>
 
-            <div>
-                <label>Title</label>
-                <input type="text" class="form-control" name="title" placeholder="Enter title">
-
-                <label>Price</label>
-                <input type="text" class="form-control" name="price" placeholder="Enter price">
-
-                <label>Description</label>
-                <input class="form-control" name="description" placeholder="Enter description"></input>
-
-                <label>Image</label>
-                <input type="text" class="form-control" name="image" placeholder="Enter image url">
-
+            <!-- Common Fields for All Categories -->
+            <div class="form-group">
+                <label for="title">Title *</label>
+                <input type="text" class="form-control" id="title" name="title" required>
             </div>
-            
+            <div class="form-group">
+                <label for="price">Price *</label>
+                <input type="decimal" class="form-control" id="price" name="price" required>
+            </div>
+            <div class="form-group">
+                <label for="image">Image URL</label>
+                <input type="text" class="form-control" id="image" name="image">
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea class="form-control" id="description" name="description"></textarea>
+            </div>
 
             
+
+            <!-- Dynamic Fields will be inserted here -->
             <div id="dynamicFields"></div>
 
-            <div class="row">
-                <div class="col">
-                    <button type="submit" class="btn btn-primary btn-block">Submit</button>
-                </div>
-                <div class="col">
-                    <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#addItemModal" id="addItemButton" style="display: none;">Add Custom Field</button>
-                </div>
-            </div>
+            <!-- Example button with an ID -->
+            <button type="button" class="btn btn-info mt-3" data-toggle="modal" data-target="#addCustomFieldModal">Add Custom Field</button>
+
+            <button type="submit" class="btn btn-primary mt-3">Submit</button>
         </form>
     </div>
-    
-    <!-- Add Item Modal -->
-    <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="addItemModalLabel">Add New Field</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <input type="text" class="form-control" id="newFieldName" placeholder="Enter field name">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" onclick="addNewField()">Add Field</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
+
     <script>
-        function updateFieldsBasedOnCategory() {
-            const category = document.getElementById('itemCategory').value;
-            const fieldsContainer = document.getElementById('dynamicFields');
-            fieldsContainer.innerHTML = ''; // Reset existing fields
+        function updateCategoryFields() {
+            const category = document.getElementById('category').value;
+            const dynamicFields = document.getElementById('dynamicFields');
+            dynamicFields.innerHTML = ''; // Clear previous fields
         
-            // Show the "Add Custom Field" button
-            document.getElementById('addItemButton').style.display = 'block';
-        
-            // Predefined fields for each category
+            // Predefined fields for each category with special handling for subfields
             const categoryFields = {
                 'vehicles': ['Type', 'Brand', 'Model', 'Year', 'Color', 'Fuel Type'],
-                'phones': ['Brand','Model', 'Year', 'Storage', 'Color'],
-                'computers': ['Type','Brand', 'Model', 'Storage', 'Color'],
-                'private-lessons': ['Title','Name of the Tutor']
+                'phones': ['Brand', 'Model', 'Year', 'Storage', 'Color'],
+                'computers': ['Type', 'Brand', 'Model', 'Processor', 'Graphics Card'], 
+                'private-lessons': ['Tutor Name', 'Location', 'Duration', 'Lessons'] 
             };
         
             const fieldsToAdd = categoryFields[category] || [];
         
             fieldsToAdd.forEach(field => {
-                const fieldGroup = document.createElement('div');
-                fieldGroup.className = 'form-group';
-                fieldGroup.innerHTML = `
-                    <label>${field}</label>
-                    <input type="text" class="form-control" name="${field.toLowerCase().replace(/\s+/g, '-')}" placeholder="Enter ${field}">
-                `;
-                fieldsContainer.appendChild(fieldGroup);
+                const fieldDiv = document.createElement('div');
+                fieldDiv.classList.add('form-group');
+                
+                // Standard fields setup
+                fieldDiv.innerHTML = `<label for="${field.toLowerCase().replace(' ', '-')}">${field}</label>
+                    <input type="text" class="form-control" id="${field.toLowerCase()}" name="${field.toLowerCase().replace(/\s+/g, '-')}" placeholder="Enter ${field}">`;
+                dynamicFields.appendChild(fieldDiv);
             });
+        
+            // Adding special fields with subfields and 'Add More' functionality
+            if (category === 'phones') {
+                addCameraSpecifications(dynamicFields);
+            } else if (category === 'computers') {
+                addStorageOptions(dynamicFields, 'Storage');
+            }
         }
         
-        function addNewField() {
-            const fieldName = document.getElementById('newFieldName').value.trim();
+        function addCameraSpecifications(container) {
+            const html = `
+                <div class="form-group">
+                    <label>Camera Specifications</label>
+                    <div class="ml-4" id="cameraSpecs">
+                        <div>
+                            <label>Main Camera Specifications</label>
+                            <input type="text" class="form-control mb-2" name="camera_specs_main" placeholder="Enter main camera specifications">
+                            <label>Front Camera Specifications</label>
+                            <input type="text" class="form-control mb-2" name="camera_specs_front" placeholder="Enter front camera specifications">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-info" onclick="$('#addSubFieldModal').modal('show')">Add Camera Specs</button>
+                </div>
+            `;
+            container.innerHTML += html;
+        }
+        
+        function addStorageOptions(container, fieldName) {
+            const html = `
+                <div class="form-group">
+                    <label>${fieldName}</label>
+                    <div class="ml-4">
+                        <input type="text" class="form-control mb-2" name="storage_ssd" placeholder="Enter SSD capacity">
+                        <input type="text" class="form-control mb-2" name="storage_hdd" placeholder="Enter HDD capacity">
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        }
+        
+        function addSubFieldFromModal() {
+            const fieldName = document.getElementById('subFieldName').value.trim();
             if (!fieldName) {
                 alert('Field name cannot be empty.');
                 return;
             }
-        
-            const fieldsContainer = document.getElementById('dynamicFields');
-            const fieldGroup = document.createElement('div');
-            fieldGroup.className = 'form-group';
-            fieldGroup.innerHTML = `
+
+            const container = document.getElementById('cameraSpecs');
+            const div = document.createElement('div');
+            div.className = 'form-group';
+            div.innerHTML = `
+            <div>
                 <label>${fieldName}</label>
                 <div class="d-flex align-items-center">
-                    <input type="text" class="form-control" name="${fieldName.toLowerCase().replace(/\s+/g, '-')}" placeholder="Enter ${fieldName}">
-                    <button type="button" class="btn btn-danger btn-sm ml-2" onclick="this.parentElement.remove()">Delete</button>
+                    <input type="text" class="form-control" name="camera_specs_${fieldName.toLowerCase().replace(' ', '-')}" placeholder="${fieldName}" />
+                    <button class="btn btn-danger ml-2" onclick="this.parentNode.parentNode.remove()">Delete</button>
                 </div>
+            </div>
             `;
+            container.appendChild(div);
         
-            fieldsContainer.appendChild(fieldGroup);
-        
-            // Clear the input field and hide the modal
-            document.getElementById('newFieldName').value = '';
-            $('#addItemModal').modal('hide');
+            $('#addSubFieldModal').modal('hide');
         }
-        </script>
+
+    function addCustomFieldFromModal() {
+        const fieldName = document.getElementById('customFieldModalName').value.trim();
+        if (!fieldName) {
+            alert('Field name cannot be empty.');
+            return;
+        }
+    
+        const dynamicFields = document.getElementById('dynamicFields');
+        const fieldGroup = document.createElement('div');
+        fieldGroup.className = 'form-group';
+        fieldGroup.innerHTML = `
+            <div>
+                <label>${fieldName}</label>
+                <div class="d-flex align-items-center">
+                    <input type="text" class="form-control mr-2" name="${fieldName.toLowerCase().replace(/\s+/g, '_')}" placeholder="Enter value for ${fieldName}" />
+                    <button class="btn btn-danger" onclick="this.parentNode.parentNode.remove()">Delete</button>
+                </div>
+            </div>
+        `;
+    
+        dynamicFields.appendChild(fieldGroup);
+    
+        $('#addCustomFieldModal').modal('hide'); // Hide the modal after adding
+    }
+
+    // Example button onclick to open the modal for adding camera specifications
+    function openAddSubFieldModal() {
+        addingFieldType = 'cameraSpecs'; // Example, adjust as needed
+        $('#addSubFieldModal').modal('show');
+    }
+
+     </script>
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
