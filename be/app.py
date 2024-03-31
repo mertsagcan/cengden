@@ -31,14 +31,9 @@ uri = "mongodb+srv://mertsagcan:QSd1qTO6ETj2ETKy@cengdendb.sznqoxa.mongodb.net/?
 client = MongoClient(uri, server_api=ServerApi('1'))
 
 
-
-#items = [
-#    {"id": i, "title": f"Item {i}", "description": f"Description for Item {i}", "category": "Category"}
-#    for i in range(1, 101)  # Generating 100 items for demonstration
-#]
-
 ITEMS_PER_PAGE = 10
 
+#This is the route for home page. It is accessible by everyone.
 @app.route('/')
 def home():
     items = list(client.cengdendb.items.find())
@@ -47,13 +42,15 @@ def home():
     end = start + ITEMS_PER_PAGE
     total_pages = ceil(len(items) / ITEMS_PER_PAGE)
     if 'user' in session:
+        user_id = session['user']['userinfo']['sub']
         if session['user']['userinfo']['user_metadata']['is_admin']:
-            return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category="All Items", is_admin=True)
+            return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category="All Items", is_admin=True, user_id=user_id)
         else:
-            return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category="All Items", is_admin=False)
+            return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category="All Items", is_admin=False, user_id=user_id)
     else:
-        return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=False, category="All Items", is_admin=False)
+        return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=False, category="All Items", is_admin=False, user_id=False)
 
+#This is the route for categories. It is accessible by everyone.
 @app.route('/categories/<string:category>')
 def category(category):
     if(category == "vehicles"):
@@ -70,13 +67,156 @@ def category(category):
     end = start + ITEMS_PER_PAGE
     total_pages = ceil(len(items) / ITEMS_PER_PAGE)
     if 'user' in session:
+        user_id = session['user']['userinfo']['sub']
         if session['user']['userinfo']['user_metadata']['is_admin']:
-            return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category=category1, is_admin=True)
+            return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category=category1, is_admin=True, user_id=user_id)
         else:
-            return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category=category1, is_admin=False)
+            return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category=category1, is_admin=False, user_id=user_id)
     else:
-        return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=False, category=category1, is_admin=False)
+        return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=False, category=category1, is_admin=False, user_id=False)
 
+
+#This is the route for item details page. It is accessible by everyone.
+@app.route('/item/<string:item_id>')
+def item_detail(item_id):
+    item  = client.cengdendb.items.find_one({"_id" : ObjectId(item_id)})
+    owner_email = client.cengdendb.users.find_one({"_id": item['owner_id']})['email']
+    owner_phone = client.cengdendb.users.find_one({"_id": item['owner_id']})['phone']
+    owner_is_public = client.cengdendb.users.find_one({"_id": item['owner_id']})['profile_visibility']
+    if item:
+        if 'user' in session:
+            if session['user']['userinfo']['sub'] == item['owner_id']:
+                return render_template('item-details.html', item=item, is_owner=True, signed_in=True, is_admin=False, owner_email=owner_email, owner_phone=owner_phone)
+            elif session['user']['userinfo']['user_metadata']['is_admin']:
+                return render_template('item-details.html', item=item, is_owner=False, signed_in=True, is_admin=True, owner_email=owner_email, owner_phone=owner_phone)
+            else:
+                return render_template('item-details.html', item=item, is_owner=False, signed_in=True, is_admin=False, owner_email=owner_email, owner_phone=owner_phone)
+        elif owner_is_public == 'public':
+            return render_template('item-details.html', item=item, is_owner=False, signed_in=False, is_admin=False, owner_email=owner_email, owner_phone=owner_phone)
+        else:
+            return render_template('item-details.html', item=item, is_owner=False, signed_in=False, is_admin=False)
+    else:
+        return "Item not found", 404
+
+#This is the route for editing an item. It is only accessible by the owner of the item.
+@app.route('/item/<string:item_id>', methods=['POST'])
+def item_detail_submit(item_id):
+    #Get the form inputs and put them into mongodb to update the existing item
+    form_fields = {}
+    for key in request.form:
+        form_fields[key] = request.form[key]
+    form_fields = {k: v for k, v in form_fields.items() if v is not None and v != ""}
+    client.cengdendb.items.update_one({"_id": ObjectId(item_id)}, {"$set": form_fields})
+    return redirect('/item/' + item_id)
+
+#This is the route for profile page. It is only accessible by the owner of the profile.
+@app.route('/profile')
+def profile():
+    user_id = session['user']['userinfo']['sub']
+    user_details = client.cengdendb.users.find_one({"_id": user_id})
+    if 'user' in session:
+        return render_template('profile.html', user=user_details, signed_in=True)
+    else:
+        return redirect(url_for('login'))
+
+@app.route('/profile', methods=['GET','POST'])
+def profile_submit():
+    user_id = session['user']['userinfo']['sub']
+    form_fields = {}
+    for key in request.form:
+        form_fields[key] = request.form[key]
+    form_fields = {k: v for k, v in form_fields.items() if v is not None and v != ""}
+    client.cengdendb.users.update_one({"_id": user_id}, {"$set": form_fields})
+    return redirect('/profile')
+
+
+@app.route("/add-item")
+def add_item():
+    return render_template('add-item.html', signed_in=True)
+
+# Route for handling form submission and adding item to MongoDB
+@app.route("/add-item", methods=["POST"])
+def handle_add_item():
+    form_fields = {}
+    form_fields["owner_id"] = client.cengdendb.users.find_one({"email": session.get('user')["userinfo"]["email"]})["_id"]
+    form_fields["favorites"] = []
+    form_fields["is_active"] = True  
+
+    for key in request.form:
+        form_fields[key] = request.form[key]
+
+    form_fields = {k: v for k, v in form_fields.items() if v is not None and v != ""}
+
+    try:
+
+        client.cengdendb.items.insert_one(form_fields)
+        message = "Item added successfully!"
+    except Exception as e:
+        message = "An error occurred, please try again."
+
+    return redirect('/users-items')
+
+#This is the route for users items page. It is only accessible by the owner of the items.
+@app.route("/users-items")
+def users_items():
+    user_id = session['user']['userinfo']['sub']
+    items = list(client.cengdendb.items.find({"owner_id": user_id}))
+    page = request.args.get('page', 1, type=int)
+    start = (page - 1) * ITEMS_PER_PAGE
+    end = start + ITEMS_PER_PAGE
+    total_pages = ceil(len(items) / ITEMS_PER_PAGE)
+    return render_template('users-items.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True)
+
+#This is the route for deleting an item. It is only accessible by the owner of the item and the admin.
+@app.route("/delete-item/<string:item_id>" , methods=["POST"])
+def delete_item(item_id):
+    client.cengdendb.items.delete_one({"_id": ObjectId(item_id)})
+    if session['user']['userinfo']['user_metadata']['is_admin']:
+        return redirect('/')
+    else:
+        return redirect('/users-items')
+
+@app.route("/toggle-active/<string:item_id>", methods=["POST"])
+def toggle_active(item_id):
+    item = client.cengdendb.items.find_one({"_id": ObjectId(item_id)})
+    client.cengdendb.items.update_one({"_id": ObjectId(item_id)}, {"$set": {"is_active": not item["is_active"]}})
+    return redirect('/users-items')
+
+
+#This is the route for favorites page. It is only accessible by the users.
+@app.route("/favorites")
+def favorites():
+    user_id = session['user']['userinfo']['sub']
+    user = client.cengdendb.users.find_one({"_id": user_id})
+    items = list(client.cengdendb.items.find({"_id": {"$in": user["favorites"]}}))
+    page = request.args.get('page', 1, type=int)
+    start = (page - 1) * ITEMS_PER_PAGE
+    end = start + ITEMS_PER_PAGE
+    total_pages = ceil(len(items) / ITEMS_PER_PAGE)
+    return render_template('favorites.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True)
+
+@app.route("/toggle-favorites/<string:item_id>", methods=["POST"])
+def toggle_favorites(item_id):
+    user_id = session['user']['userinfo']['sub']
+    item = client.cengdendb.items.find_one({"_id": ObjectId(item_id)})
+    user = client.cengdendb.users.find_one({"_id": user_id})
+    if item["_id"] in user["favorites"]:
+        client.cengdendb.users.update_one({"_id": user_id}, {"$pull": {"favorites": item["_id"]}})
+    else:
+        client.cengdendb.users.update_one({"_id": user_id}, {"$push": {"favorites": item["_id"]}})
+    return redirect('/')
+
+#This is the route for all users page. It is only accessible by admins.
+@app.route("/all-users")
+def all_users():
+    users = list(client.cengdendb.users.find())
+    if 'user' in session:
+        if session['user']['userinfo']['user_metadata']['is_admin']:
+            return render_template('all-users.html', users=users, is_owner=True, signed_in=True, is_admin=True)
+        else:
+            return redirect(url_for('home'))
+
+#This part is for handle authenticaotin with Auth0.
 @app.route('/login')
 def login():
     return oauth.auth0.authorize_redirect(url_for('callback', _external=True))
@@ -95,7 +235,7 @@ def callback():
     user_name = user['user_metadata']['fullName']
     user_email = user['email']
     user_phone = user['user_metadata']['phoneNumber']
-    user_data = {"_id": user_id, "name": user_name, "email": user_email , "phone": user_phone}
+    user_data = {"_id": user_id, "name": user_name, "email": user_email , "phone": user_phone, "is_public": True, "favorites": []}
     if not client.cengdendb.users.find_one({"_id": user_id}):
         client.cengdendb.users.insert_one(user_data)
     return redirect('/')
@@ -105,59 +245,6 @@ def logout():
     session.clear()
     params = {'returnTo': url_for('home', _external=True), 'client_id': AUTH0_CLIENT_ID}
     return redirect('https://' + AUTH0_DOMAIN + '/v2/logout?' + urlencode(params, quote_via=quote_plus))
-
-@app.route('/item/<string:item_id>')
-def item_detail(item_id):
-    item  = client.cengdendb.items.find_one({"_id" : ObjectId(item_id)})
-    print
-    if item:
-        return render_template('item-details.html', item=item)
-    else:
-        return "Item not found", 404
-
-@app.route('/profile')
-def profile():
-    user_id = session['user']['userinfo']['sub']
-    user_details = client.cengdendb.users.find_one({"_id": user_id})
-    if 'user' in session:
-        return render_template('profile.html', user=user_details, signed_in=True)
-    else:
-        return redirect(url_for('login'))
-
-@app.route("/add-item")
-def add_item():
-    return render_template('add-item.html', signed_in=True)
-
-# Route for handling form submission and adding item to MongoDB
-@app.route("/add-item", methods=["POST"])
-def handle_add_item():
-    form_fields = {}
-    form_fields["owner_id"] = client.cengdendb.users.find_one({"email": session.get('user')["userinfo"]["email"]})["_id"]
-    form_fields["favoured_users"] = []
-
-    for key in request.form:
-        form_fields[key] = request.form[key]
-
-    form_fields = {k: v for k, v in form_fields.items() if v is not None and v != ""}
-
-    try:
-        client.cengdendb.items.insert_one(form_fields)
-        message = "Item added successfully!"
-    except Exception as e:
-        message = "An error occurred, please try again."
-
-    return redirect('/')
-
-@app.route("/users-items")
-def users_items():
-    user_id = session['user']['userinfo']['sub']
-    items = list(client.cengdendb.items.find({"owner_id": user_id}))
-    page = request.args.get('page', 1, type=int)
-    start = (page - 1) * ITEMS_PER_PAGE
-    end = start + ITEMS_PER_PAGE
-    total_pages = ceil(len(items) / ITEMS_PER_PAGE)
-    return render_template('users-items.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
