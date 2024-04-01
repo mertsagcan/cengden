@@ -6,7 +6,6 @@ from bson import ObjectId
 from authlib.integrations.flask_client import OAuth
 from urllib.parse import urlencode, quote_plus
 from auth0api import delete_user, update_user_password
-
 AUTH0_CLIENT_ID = 'GMUL2XNE7KctLcwwRNmsE8Yorj1uv1mB'
 AUTH0_DOMAIN = 'dev-bgni6r2aiwkt4xgt.us.auth0.com'
 AUTH0_CLIENT_SECRET = 'WIWh9Qgs5Bu8P5P9m_hOdF27pnOinSRa1QQ2SMRucmQySsUFh9B25SDmDUNp0pTC'
@@ -40,21 +39,21 @@ def home():
     if 'user' in session:
         user_id = session['user']['userinfo']['sub']
         if session['user']['userinfo']['user_metadata']['is_admin']:
-            items = list(client.cengdendb.items.find())
+            items = list(reversed(list(client.cengdendb.items.find())))
             page = request.args.get('page', 1, type=int)
             start = (page - 1) * ITEMS_PER_PAGE
             end = start + ITEMS_PER_PAGE
             total_pages = ceil(len(items) / ITEMS_PER_PAGE)
             return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category="All Items", is_admin=True, user_id=user_id)
         else:
-            items = list(client.cengdendb.items.find({"is_active": True}))
+            items = list(reversed(list(client.cengdendb.items.find({"is_active": True}))))
             page = request.args.get('page', 1, type=int)
             start = (page - 1) * ITEMS_PER_PAGE
             end = start + ITEMS_PER_PAGE
             total_pages = ceil(len(items) / ITEMS_PER_PAGE)
             return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category="All Items", is_admin=False, user_id=user_id)
     else:
-        items = list(client.cengdendb.items.find({"is_active": True}))
+        items = list(reversed(list(client.cengdendb.items.find({"is_active": True}))))
         page = request.args.get('page', 1, type=int)
         start = (page - 1) * ITEMS_PER_PAGE
         end = start + ITEMS_PER_PAGE
@@ -67,21 +66,21 @@ def category(category):
     if 'user' in session:
         user_id = session['user']['userinfo']['sub']
         if session['user']['userinfo']['user_metadata']['is_admin']:
-            items = list(client.cengdendb.items.find({"category" : category}))
+            items = list(reversed(list(client.cengdendb.items.find({"category" : category}))))
             page = request.args.get('page', 1, type=int)
             start = (page - 1) * ITEMS_PER_PAGE
             end = start + ITEMS_PER_PAGE
             total_pages = ceil(len(items) / ITEMS_PER_PAGE)
             return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category=category, is_admin=True, user_id=user_id)
         else:
-            items = list(client.cengdendb.items.find({"is_active": True, "category": category}))
+            items = list(reversed(list(client.cengdendb.items.find({"is_active": True, "category": category}))))
             page = request.args.get('page', 1, type=int)
             start = (page - 1) * ITEMS_PER_PAGE
             end = start + ITEMS_PER_PAGE
             total_pages = ceil(len(items) / ITEMS_PER_PAGE)
             return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category=category, is_admin=False, user_id=user_id)
     else:
-        items = list(client.cengdendb.items.find({"is_active": True, "category": category}))
+        items = list(reversed(list(client.cengdendb.items.find({"is_active": True, "category": category}))))
         page = request.args.get('page', 1, type=int)
         start = (page - 1) * ITEMS_PER_PAGE
         end = start + ITEMS_PER_PAGE
@@ -95,19 +94,20 @@ def item_detail(item_id):
     item  = client.cengdendb.items.find_one({"_id" : ObjectId(item_id)})
     owner_email = client.cengdendb.users.find_one({"_id": item['owner_id']})['email']
     owner_phone = client.cengdendb.users.find_one({"_id": item['owner_id']})['phone']
+    owner_name = client.cengdendb.users.find_one({"_id": item['owner_id']})['name']
     owner_is_public = client.cengdendb.users.find_one({"_id": item['owner_id']})['profile_visibility']
     if item:
         if 'user' in session:
             if session['user']['userinfo']['sub'] == item['owner_id']:
-                return render_template('item-details.html', item=item, is_owner=True, signed_in=True, is_admin=False, owner_email=owner_email, owner_phone=owner_phone)
+                return render_template('item-details.html', item=item, is_owner=True, signed_in=True, is_admin=False, owner_email=owner_email, owner_phone=owner_phone, owner_name=owner_name)
             elif session['user']['userinfo']['user_metadata']['is_admin']:
-                return render_template('item-details.html', item=item, is_owner=False, signed_in=True, is_admin=True, owner_email=owner_email, owner_phone=owner_phone)
+                return render_template('item-details.html', item=item, is_owner=False, signed_in=True, is_admin=True, owner_email=owner_email, owner_phone=owner_phone, owner_name=owner_name)
             else:
-                return render_template('item-details.html', item=item, is_owner=False, signed_in=True, is_admin=False, owner_email=owner_email, owner_phone=owner_phone)
+                return render_template('item-details.html', item=item, is_owner=False, signed_in=True, is_admin=False, owner_email=owner_email, owner_phone=owner_phone, owner_name=owner_name)
         elif owner_is_public == 'public':
-            return render_template('item-details.html', item=item, is_owner=False, signed_in=False, is_admin=False, owner_email=owner_email, owner_phone=owner_phone)
+            return render_template('item-details.html', item=item, is_owner=False, signed_in=False, is_admin=False, owner_email=owner_email, owner_phone=owner_phone, owner_name=owner_name)
         else:
-            return render_template('item-details.html', item=item, is_owner=False, signed_in=False, is_admin=False)
+            return render_template('item-details.html', item=item, is_owner=False, signed_in=False, is_admin=False, owner_name=owner_name)
     else:
         return "Item not found", 404
 
@@ -163,32 +163,39 @@ def handle_add_item():
     form_fields["owner_id"] = client.cengdendb.users.find_one({"email": session.get('user')["userinfo"]["email"]})["_id"]
     form_fields["favorites"] = []
     form_fields["is_active"] = True  
+    
 
     if(request.form.get("category") == "phones"):
         form_fields["camera-specifications"] = {}
         for key in request.form:
-            if key.startswith("camera_specs_"):
+            if key.startswith("camera_specs_") and request.form[key]:
                 #Split the key to get the camera_specs_ part and the key part
                 key_parts = key.split("_", 2)[2]
                 form_fields["camera-specifications"][key_parts] = request.form[key]
             else:
                 form_fields[key] = request.form[key]
+        if form_fields["camera-specifications"] == {}:
+            form_fields.pop("camera-specifications")
 
     elif(request.form.get("category") == "computers"):
         form_fields["storage"] = {}
         for key in request.form:
-            if key.startswith("storage_"):
+            if key.startswith("storage_") and request.form[key]:
                 #Split the key to get the storage_ part and the key part
                 key_parts = key.split("_", 1)[1]
                 form_fields["storage"][key_parts] = request.form[key]
             else:
                 form_fields[key] = request.form[key]
+        if form_fields["storage"] == {}:
+            form_fields.pop("storage")
     
     elif(request.form.get("category") == "private-lessons"):
         form_fields["lessons"] = []
         for key in request.form:
             if key == 'lessons':
                 form_fields[key] = request.form[key].split(",")
+                #Remove emty items from form_fields[key]
+                form_fields[key] = [x for x in form_fields[key] if x]
             else:
                 form_fields[key] = request.form[key]
     
@@ -211,7 +218,7 @@ def handle_add_item():
 @app.route("/users-items")
 def users_items():
     user_id = session['user']['userinfo']['sub']
-    items = list(client.cengdendb.items.find({"owner_id": user_id}))
+    items = list(reversed(list(client.cengdendb.items.find({"owner_id": user_id}))))
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * ITEMS_PER_PAGE
     end = start + ITEMS_PER_PAGE
@@ -242,7 +249,7 @@ def toggle_active(item_id):
 def favorites():
     user_id = session['user']['userinfo']['sub']
     user = client.cengdendb.users.find_one({"_id": user_id})
-    items = list(client.cengdendb.items.find({"_id": {"$in": user["favorites"]}}))
+    items = list(reversed(list(client.cengdendb.items.find({"_id": {"$in": user["favorites"]}}))))
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * ITEMS_PER_PAGE
     end = start + ITEMS_PER_PAGE
@@ -278,9 +285,13 @@ def delete_user_submit(user_id):
     items = list(client.cengdendb.items.find({"owner_id": user_id}))
     for item in items:
         #Delete the itesm from users fav lists
-        for user_id in item["favorites"]:
-            client.cengdendb.users.update_one({"_id": user_id}, {"$pull": {"favorites": item["_id"]}})
+        for users_id in item["favorites"]:
+            client.cengdendb.users.update_one({"_id": users_id}, {"$pull": {"favorites": item["_id"]}})
         client.cengdendb.items.delete_one({"_id": item["_id"]})
+    #Remove the user from all fav lists
+    users_fav_list = client.cengdendb.users.find_one({"_id": user_id})['favorites']
+    for item_id in users_fav_list:
+        client.cengdendb.items.update_one({"_id": item_id}, {"$pull": {"favorites": user_id}})
     delete_user(user_id)
     client.cengdendb.users.delete_one({"_id": user_id})
     return redirect('/all-users')

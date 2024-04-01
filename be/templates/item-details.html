@@ -175,8 +175,12 @@
                     <!-- Recursive attribute display/editing -->
                     {{ display_attributes(item, exclude=['title', 'image', '_id', 'is_active', 'owner_id', 'favorites'], is_owner=is_owner) }}
                 </div>
+                <div class="col-md-6">
+                    <p>Owner: {{owner_name}}</p>
+                </div>
                 {%if owner_email%}
                     <div class="col-md-6">
+                        
                         <p>Email: {{owner_email}}</p>
                         <p>Phone: {{owner_phone}}</p>
                     </div>

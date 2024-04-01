@@ -122,8 +122,9 @@
             {% for item in items %}
                 <li class="d-flex justify-content-between align-items-center py-2">
                     <div class="d-flex align-items-center">
-                        <img src="{{ item.image }}" alt="{{ item.title }}" style="width: 60px; height: auto; margin-right: 15px;">
-        
+                        
+                        <img src="{{ item.image }}" alt="https://cow.ceng.metu.edu.tr/uploads/default/original/1X/19ec6aa6791cb9ee2f8d8b885be5fe36ec97c3d7.png" style="width: 60px; height: auto; margin-right: 15px;">
+
                         <div>
                             <a href="{{ url_for('item_detail', item_id=item._id) }}" style="font-weight: bold;">{{ item.title }}</a>
                             <p style="margin-bottom: 0;">Price: ${{ item.price }}</p>
