@@ -6,6 +6,7 @@ from bson import ObjectId
 from authlib.integrations.flask_client import OAuth
 from urllib.parse import urlencode, quote_plus
 from auth0api import delete_user, update_user_password
+from sendMail import send_mail
 AUTH0_CLIENT_ID = 'GMUL2XNE7KctLcwwRNmsE8Yorj1uv1mB'
 AUTH0_DOMAIN = 'dev-bgni6r2aiwkt4xgt.us.auth0.com'
 AUTH0_CLIENT_SECRET = 'WIWh9Qgs5Bu8P5P9m_hOdF27pnOinSRa1QQ2SMRucmQySsUFh9B25SDmDUNp0pTC'
@@ -117,6 +118,12 @@ def item_detail_submit(item_id):
     #Get the form inputs and put them into mongodb to update the existing item
     form_fields = {}
     empty_items = {}
+    item = client.cengdendb.items.find_one({"_id": ObjectId(item_id)})
+    if request.form['price'] and float(request.form['price']) < float(item['price']):
+        #Send email to all users who favorited the item
+        for user_id in item['favorites']:
+            user_email = client.cengdendb.users.find_one({"_id": user_id})['email']
+            send_mail(item['title'], request.form['price'], user_email)
     for key in request.form:
         value = request.form[key]
         if value is not None and value != "":
@@ -315,7 +322,7 @@ def callback():
     user_name = user['user_metadata']['fullName']
     user_email = user['email']
     user_phone = user['user_metadata']['phoneNumber']
-    user_data = {"_id": user_id, "name": user_name, "email": user_email , "phone": user_phone, "is_public": True, "favorites": []}
+    user_data = {"_id": user_id, "name": user_name, "email": user_email , "phone": user_phone, "profile_visibility": "public", "favorites": []}
     if not client.cengdendb.users.find_one({"_id": user_id}):
         client.cengdendb.users.insert_one(user_data)
     return redirect('/')
