@@ -41,6 +41,38 @@ def home():
         user_id = session['user']['userinfo']['sub']
         if session['user']['userinfo']['user_metadata']['is_admin']:
             items = list(reversed(list(client.cengdendb.items.find())))
+            if len(items) > 100:
+                items = items[:100]
+            page = request.args.get('page', 1, type=int)
+            start = (page - 1) * ITEMS_PER_PAGE
+            end = start + ITEMS_PER_PAGE
+            total_pages = ceil(len(items) / ITEMS_PER_PAGE)
+            return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category="All Items", is_admin=True, user_id=user_id)
+        else:
+            items = list(reversed(list(client.cengdendb.items.find({"is_active": True}))))
+            if len(items) > 100:
+                items = items[:100]
+            page = request.args.get('page', 1, type=int)
+            start = (page - 1) * ITEMS_PER_PAGE
+            end = start + ITEMS_PER_PAGE
+            total_pages = ceil(len(items) / ITEMS_PER_PAGE)
+            return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=True, category="All Items", is_admin=False, user_id=user_id)
+    else:
+        items = list(reversed(list(client.cengdendb.items.find({"is_active": True}))))
+        if len(items) > 100:
+                items = items[:100]
+        page = request.args.get('page', 1, type=int)
+        start = (page - 1) * ITEMS_PER_PAGE
+        end = start + ITEMS_PER_PAGE
+        total_pages = ceil(len(items) / ITEMS_PER_PAGE)
+        return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=False, category="All Items", is_admin=False, user_id=False)
+
+@app.route('/all-items')
+def all_items():
+    if 'user' in session:
+        user_id = session['user']['userinfo']['sub']
+        if session['user']['userinfo']['user_metadata']['is_admin']:
+            items = list(reversed(list(client.cengdendb.items.find())))
             page = request.args.get('page', 1, type=int)
             start = (page - 1) * ITEMS_PER_PAGE
             end = start + ITEMS_PER_PAGE
@@ -60,6 +92,7 @@ def home():
         end = start + ITEMS_PER_PAGE
         total_pages = ceil(len(items) / ITEMS_PER_PAGE)
         return render_template('index.html', items=items[start:end], page=page, total_pages=total_pages, signed_in=False, category="All Items", is_admin=False, user_id=False)
+
 
 #This is the route for categories. It is accessible by everyone.
 @app.route('/categories/<string:category>')
