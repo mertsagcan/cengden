@@ -14,6 +14,7 @@ Check out the live version of Cengden [here](https://cengden-e2gc.onrender.com).
 - **Responsive Design**: A mobile-friendly interface that adjusts to different screen sizes for optimal viewing.
 - **Admin Dashboard**: Special access for admins to view all users and manage site content.
 -**WHEN ADDING LESSONS PLEASE SEPERATE THE LESSON NAMES WITH A COMMA.**: It  splits the comma.
+-**IT SEND THE VERIFICATION MAIL BUT I DID NOT IMPLEMENT THE LOGIC IN THE CODE**
 
 ## Technology Stack
 
