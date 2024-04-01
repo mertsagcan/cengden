@@ -13,8 +13,7 @@ Check out the live version of Cengden [here](https://cengden-e2gc.onrender.com).
 - **Email Notifications**: Automated email notifications via SendGrid for actions like registration confirmation and item listing updates.
 - **Responsive Design**: A mobile-friendly interface that adjusts to different screen sizes for optimal viewing.
 - **Admin Dashboard**: Special access for admins to view all users and manage site content.
--**WHEN ADDING LESSONS PLEASE SEPERATE THE LESSON NAMES WITH A COMMA.**: It  splits the comma.
--**IT SEND THE VERIFICATION MAIL BUT I DID NOT IMPLEMENT THE LOGIC IN THE CODE**
+
 
 ## Technology Stack
 
@@ -25,19 +24,27 @@ Check out the live version of Cengden [here](https://cengden-e2gc.onrender.com).
 - **Email Service**: SendGrid for sending out email notifications.
 - **Deployment**: Render for hosting and deploying the live application.
 
-## Local Development Setup
+- **REASONING BEHIND THESE TECHNOLOGIES**:
+Flask: I chose Flask for its simplicity and flexibility. As a micro-framework, Flask provides just the essentials for web development, allowing me to start small and scale up with extensions as needed. It's perfect for rapid development without the overhead of larger frameworks, and its Python base means I can leverage a language I'm already comfortable with. The vast community support for Flask also ensures resources and help are readily available.
 
-### Prerequisites
+HTML: HTML is the backbone of web content. Its universality across web browsers and simplicity make it the ideal choice for structuring the content of the Cengden platform. It allows for seamless integration with CSS for styling and JavaScript for interactive elements, ensuring a rich user experience. The control HTML offers over page structure is crucial for optimizing performance, accessibility, and SEO.
 
-- Python 3.8+
-- MongoDB
-- An Auth0 account
-- A SendGrid account
+By combining Flask's server-side capabilities with the foundational web structure provided by HTML, I created a scalable, efficient, and user-friendly marketplace platform.
 
-### Setup Instructions
+Also Render, Auth0, SendGrid and MongoDB has native suport for Flask and it has made the implementation process much more easier.
 
-1. **Clone the Repository**
 
-```bash
-git clone https://github.com/yourusername/cengden.git
-cd cengden
+
+## Login Information
+- **ADMIN USER INFO**: Username: mertsagcan99@gmail.com    Password: ceng495CLOUD
+- **REGULAR USER INFO**: Username: 2310449@ceng.metu.edu.tr  Password: 123qwe123QWE
+
+- **IT SENDS THE VERIFICATION MAIL BUT I DID NOT IMPLEMENT THE LOGIC IN THE CODE**
+
+- **WHEN ADDING LESSONS PLEASE SEPERATE THE LESSON NAMES WITH A COMMA.**: It  splits the comma.
+
+
+
+
+
+
