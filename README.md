@@ -35,15 +35,6 @@ Also Render, Auth0, SendGrid and MongoDB has native suport for Flask and it has 
 
 
 
-## Login Information
-- **ADMIN USER INFO**: Username: mertsagcan99@gmail.com    Password: ceng495CLOUD
-- **REGULAR USER INFO**: Username: 2310449@ceng.metu.edu.tr  Password: 123qwe123QWE
-
-- **IT SENDS THE VERIFICATION MAIL BUT I DID NOT IMPLEMENT THE LOGIC IN THE CODE**
-
-- **WHEN ADDING LESSONS PLEASE SEPERATE THE LESSON NAMES WITH A COMMA.**: It  splits the comma.
-
-
 
 
 
