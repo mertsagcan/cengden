@@ -3,8 +3,8 @@ import os
 from sendgrid.helpers.mail import Mail, Email, To, Content
 
 def send_mail(item_name, item_price, to_email):
-    sg = sendgrid.SendGridAPIClient(api_key='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')
-    from_email = Email("e2310449@ceng.metu.edu.tr")  # Change to your verified sender
+    sg = sendgrid.SendGridAPIClient(api_key='sendgrid api key')
+    from_email = Email("example@mail.com")  # Change to your verified sender
     to_email = To(to_email)  # Change to your recipient
     subject = "An item you have favuorited is now cheaper!"
     content = Content("text/plain", "Item: "+ item_name + "\nPrice is now: " + item_price)

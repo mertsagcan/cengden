@@ -7,10 +7,12 @@ from authlib.integrations.flask_client import OAuth
 from urllib.parse import urlencode, quote_plus
 from auth0api import delete_user, update_user_password
 from sendMail import send_mail
-AUTH0_CLIENT_ID = 'GMUL2XNE7KctLcwwRNmsE8Yorj1uv1mB'
-AUTH0_DOMAIN = 'dev-bgni6r2aiwkt4xgt.us.auth0.com'
-AUTH0_CLIENT_SECRET = 'WIWh9Qgs5Bu8P5P9m_hOdF27pnOinSRa1QQ2SMRucmQySsUFh9B25SDmDUNp0pTC'
-APP_SECRET_KEY = 'YOUR_SECRET'
+
+#This part is for the configuration of the app and the connection to the database. User Your own values for the following variables.
+AUTH0_CLIENT_ID = 'AUTH0_CLIENT_ID'
+AUTH0_DOMAIN = 'AUTH0_DOMAIN'
+AUTH0_CLIENT_SECRET = 'AUTH=0_CLIENT_SECRET'
+APP_SECRET_KEY = 'APP_SECRET_KEY'
 
 app = Flask(__name__)
 
@@ -28,7 +30,8 @@ oauth.register(
     },
 )
 
-uri = "mongodb+srv://mertsagcan:QSd1qTO6ETj2ETKy@cengdendb.sznqoxa.mongodb.net/?retryWrites=true&w=majority&appName=cengdendb"
+#This is the mongoDB uri.
+uri = "MongoDB uri"
 client = MongoClient(uri, server_api=ServerApi('1'))
 
 
