@@ -2,9 +2,6 @@
 
 Cengden is a dynamic marketplace platform designed to facilitate the buying, selling, and listing of various items, including vehicles, phones, computers, and private lessons. This comprehensive platform integrates user authentication, email notifications, and a robust item listing feature to create a seamless user experience.
 
-## Live Site
-
-Check out the live version of Cengden [here](https://cengden-e2gc.onrender.com).
 
 ## Features
 
